@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model MenuItem {
+  id          String      @id @default(cuid())
+  name        String
+  category    String      // "bar" | "kitchen"
+  description String?
+  imageUrl    String?
+  ingredients String?     // JSON-Array: ["2cl Gin", "1cl Vermouth"]
+  steps       String?     // JSON-Array: ["Glas kühlen", "Zutaten mischen"]
+  notes       String?
+  available   Boolean     @default(true)
+  sortOrder   Int         @default(0)
+  createdAt   DateTime    @default(now())
+  orderItems  OrderItem[]
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  tableNumber String
+  category    String      // "bar" | "kitchen"
+  status      String      @default("pending") // pending | in_progress | done
+  createdAt   DateTime    @default(now())
+  items       OrderItem[]
+}
+
+model OrderItem {
+  id         String   @id @default(cuid())
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItemId String
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+  quantity   Int      @default(1)
+}
