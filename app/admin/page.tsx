@@ -49,6 +49,7 @@ export default function AdminPage() {
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
   const [uploading, setUploading] = useState(false)
   const [filterCat, setFilterCat] = useState<'all' | 'bar' | 'kitchen'>('all')
   const [orderFilter, setOrderFilter] = useState<'active' | 'all'>('active')
@@ -104,19 +105,30 @@ export default function AdminPage() {
 
   async function saveItem() {
     setSaving(true)
+    setSaveError('')
     const payload = {
       ...form,
       ingredients: form.ingredients.split('\n').map(s => s.trim()).filter(Boolean),
       steps: form.steps.split('\n').map(s => s.trim()).filter(Boolean),
     }
-    if (editingItem) {
-      await fetch(`/api/menu-items/${editingItem.id}`, {
-        method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
-      })
-    } else {
-      await fetch('/api/menu-items', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
-      })
+    try {
+      const res = editingItem
+        ? await fetch(`/api/menu-items/${editingItem.id}`, {
+            method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+          })
+        : await fetch('/api/menu-items', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+          })
+      if (!res.ok) {
+        const err = await res.text()
+        setSaveError(`Fehler ${res.status}: ${err}`)
+        setSaving(false)
+        return
+      }
+    } catch (e) {
+      setSaveError(`Verbindungsfehler: ${e}`)
+      setSaving(false)
+      return
     }
     setSaving(false)
     setShowForm(false)
@@ -428,6 +440,12 @@ export default function AdminPage() {
                   className="w-full px-3 py-2 rounded-xl text-sm border outline-none"
                   style={{ background: '#0d0d0d', borderColor: '#2a2a2a', color: '#f0f0f0' }} />
               </div>
+
+              {saveError && (
+                <div className="px-4 py-3 rounded-xl text-sm" style={{ background: '#ef444420', color: '#ef4444', border: '1px solid #ef444440' }}>
+                  {saveError}
+                </div>
+              )}
 
               {/* Available + Save */}
               <div className="flex items-center justify-between pt-2">
