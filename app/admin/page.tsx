@@ -2,10 +2,21 @@
 
 import { useState, useEffect, useRef } from 'react'
 
+const BAR_SUBCATEGORIES = [
+  { value: 'bier',          label: '🍺 Bier' },
+  { value: 'wein',          label: '🍷 Wein' },
+  { value: 'shots',         label: '🥃 Shots' },
+  { value: 'cocktails',     label: '🍸 Cocktails' },
+  { value: 'softgetraenke', label: '🥤 Softgetränke' },
+  { value: 'energy',        label: '⚡ Energy' },
+  { value: 'heissgetraenke',label: '☕ Heißgetränke' },
+]
+
 type MenuItem = {
   id: string
   name: string
   category: string
+  subcategory: string
   description: string | null
   imageUrl: string | null
   ingredients: string | null
@@ -27,7 +38,7 @@ type Order = {
 }
 
 const EMPTY_FORM = {
-  name: '', category: 'bar', description: '', imageUrl: '',
+  name: '', category: 'bar', subcategory: '', description: '', imageUrl: '',
   ingredients: '', steps: '', notes: '', price: 0, available: true, sortOrder: 0,
 }
 
@@ -90,6 +101,7 @@ export default function AdminPage() {
     setForm({
       name: item.name,
       category: item.category,
+      subcategory: item.subcategory || '',
       description: item.description || '',
       imageUrl: item.imageUrl || '',
       ingredients: parseJson(item.ingredients).join('\n'),
@@ -269,7 +281,7 @@ export default function AdminPage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="bg-gray-50 border-b border-gray-200">
-                        {['Bild', 'Name', 'Kategorie', 'Preis', 'Zutaten', 'Status', 'Aktionen'].map(h => (
+                        {['Bild', 'Name', 'Kategorie', 'Unterkategorie', 'Preis', 'Zutaten', 'Status', 'Aktionen'].map(h => (
                           <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">{h}</th>
                         ))}
                       </tr>
@@ -297,6 +309,14 @@ export default function AdminPage() {
                               }}>
                               {item.category === 'bar' ? '🍸 Bar' : '🌿 Küche'}
                             </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            {item.subcategory
+                              ? <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                                  {BAR_SUBCATEGORIES.find(s => s.value === item.subcategory)?.label ?? item.subcategory}
+                                </span>
+                              : <span className="text-gray-300 text-xs">—</span>
+                            }
                           </td>
                           <td className="px-4 py-3 font-semibold text-gray-700">
                             {item.price > 0 ? `${item.price.toFixed(2)} €` : <span className="text-gray-300">—</span>}
@@ -552,21 +572,32 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                {/* Price + Description */}
-                <div className="grid grid-cols-2 gap-3">
+                {/* Subcategory pills — only for bar */}
+                {form.category === 'bar' && (
                   <div>
-                    <label className={labelCls}>Preis (€)</label>
-                    <input type="number" placeholder="0.00" min="0" step="0.10"
-                      value={form.price || ''}
-                      onChange={e => setForm(f => ({ ...f, price: parseFloat(e.target.value) || 0 }))}
-                      className={inputCls} />
+                    <label className={labelCls}>Kategorie</label>
+                    <div className="flex flex-wrap gap-2">
+                      {BAR_SUBCATEGORIES.map(s => (
+                        <button key={s.value} type="button"
+                          onClick={() => setForm(f => ({ ...f, subcategory: f.subcategory === s.value ? '' : s.value }))}
+                          className="px-3 py-1.5 rounded-full text-sm font-medium border transition-all"
+                          style={form.subcategory === s.value
+                            ? { background: '#d97706', color: '#fff', borderColor: '#d97706' }
+                            : { background: '#fff', color: '#6b7280', borderColor: '#e5e7eb' }}>
+                          {s.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  <div>
-                    <label className={labelCls}>Beschreibung</label>
-                    <input type="text" placeholder="Kurze Beschreibung" value={form.description}
-                      onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                      className={inputCls} />
-                  </div>
+                )}
+
+                {/* Price */}
+                <div>
+                  <label className={labelCls}>Preis (€)</label>
+                  <input type="number" placeholder="0.00" min="0" step="0.10"
+                    value={form.price || ''}
+                    onChange={e => setForm(f => ({ ...f, price: parseFloat(e.target.value) || 0 }))}
+                    className={inputCls} />
                 </div>
 
                 {/* Ingredients */}
