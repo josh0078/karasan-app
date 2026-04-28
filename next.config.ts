@@ -7,6 +7,10 @@ const nextConfig: NextConfig = {
     "@libsql/client",
     "prisma",
   ],
+  images: {
+    dangerouslyAllowSVG: true,
+    remotePatterns: [],
+  },
 };
 
 export default nextConfig;

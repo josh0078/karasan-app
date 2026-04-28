@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import Image from 'next/image'
 
 type MenuItem = {
   id: string
@@ -93,14 +92,31 @@ export default function AdminPage() {
 
   async function uploadImage(file: File) {
     setUploading(true)
-    const fd = new FormData()
-    fd.append('file', file)
-    const res = await fetch('/api/upload', { method: 'POST', body: fd })
-    if (res.ok) {
-      const { url } = await res.json()
-      setForm(f => ({ ...f, imageUrl: url }))
+    try {
+      const base64 = await resizeAndEncode(file, 600, 600, 0.82)
+      setForm(f => ({ ...f, imageUrl: base64 }))
+    } finally {
+      setUploading(false)
     }
-    setUploading(false)
+  }
+
+  function resizeAndEncode(file: File, maxW: number, maxH: number, quality: number): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const img = new window.Image()
+      img.onload = () => {
+        let { width, height } = img
+        const ratio = Math.min(maxW / width, maxH / height, 1)
+        width = Math.round(width * ratio)
+        height = Math.round(height * ratio)
+        const canvas = document.createElement('canvas')
+        canvas.width = width
+        canvas.height = height
+        canvas.getContext('2d')!.drawImage(img, 0, 0, width, height)
+        resolve(canvas.toDataURL('image/jpeg', quality))
+      }
+      img.onerror = reject
+      img.src = URL.createObjectURL(file)
+    })
   }
 
   async function saveItem() {
@@ -228,10 +244,10 @@ export default function AdminPage() {
                     {filteredItems.map((item, idx) => (
                       <tr key={item.id} style={{ borderBottom: idx < filteredItems.length - 1 ? '1px solid #1e1e1e' : undefined }}>
                         <td className="px-4 py-3">
-                          <div className="relative w-12 h-12 rounded-lg overflow-hidden" style={{ background: '#0d0d0d' }}>
+                          <div className="w-12 h-12 rounded-lg overflow-hidden flex items-center justify-center" style={{ background: '#0d0d0d' }}>
                             {item.imageUrl
-                              ? <Image src={item.imageUrl} alt={item.name} fill className="object-cover" />
-                              : <div className="w-full h-full flex items-center justify-center text-xl">{item.category === 'bar' ? '🍸' : '🌿'}</div>
+                              ? <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+                              : <span className="text-xl">{item.category === 'bar' ? '🍸' : '🌿'}</span>
                             }
                           </div>
                         </td>
@@ -359,10 +375,10 @@ export default function AdminPage() {
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider block mb-2" style={{ color: '#6b7280' }}>Bild</label>
                 <div className="flex gap-3 items-start">
-                  <div className="relative w-24 h-24 rounded-xl overflow-hidden flex-shrink-0" style={{ background: '#0d0d0d' }}>
+                  <div className="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center" style={{ background: '#0d0d0d' }}>
                     {form.imageUrl
-                      ? <Image src={form.imageUrl} alt="preview" fill className="object-cover" />
-                      : <div className="w-full h-full flex items-center justify-center text-3xl">{form.category === 'bar' ? '🍸' : '🌿'}</div>
+                      ? <img src={form.imageUrl} alt="preview" className="w-full h-full object-cover" />
+                      : <span className="text-3xl">{form.category === 'bar' ? '🍸' : '🌿'}</span>
                     }
                   </div>
                   <div className="flex-1 space-y-2">

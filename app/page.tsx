@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import Image from 'next/image'
 
 type MenuItem = {
   id: string
@@ -202,13 +201,11 @@ export default function Home() {
                   className="rounded-2xl border overflow-hidden text-left transition-all hover:scale-[1.02] active:scale-[0.98]"
                   style={{ background: '#1a1a1a', borderColor: '#2a2a2a' }}
                 >
-                  <div className="relative w-full h-36" style={{ background: '#0d0d0d' }}>
+                  <div className="w-full h-36 flex items-center justify-center overflow-hidden" style={{ background: '#0d0d0d' }}>
                     {item.imageUrl ? (
-                      <Image src={item.imageUrl} alt={item.name} fill className="object-cover" />
+                      <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-4xl">
-                        {isBar ? '🍸' : '🌿'}
-                      </div>
+                      <span className="text-4xl">{isBar ? '🍸' : '🌿'}</span>
                     )}
                   </div>
                   <div className="p-3">
@@ -287,13 +284,11 @@ export default function Home() {
             style={{ background: '#161616', border: '1px solid #2a2a2a' }}
           >
             {/* Image */}
-            <div className="relative w-full h-52 flex-shrink-0" style={{ background: '#0d0d0d' }}>
+            <div className="w-full h-52 flex-shrink-0 flex items-center justify-center overflow-hidden" style={{ background: '#0d0d0d' }}>
               {selectedItem.imageUrl ? (
-                <Image src={selectedItem.imageUrl} alt={selectedItem.name} fill className="object-cover" />
+                <img src={selectedItem.imageUrl} alt={selectedItem.name} className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-7xl">
-                  {isBar ? '🍸' : '🌿'}
-                </div>
+                <span className="text-7xl">{isBar ? '🍸' : '🌿'}</span>
               )}
               <button
                 onClick={() => setSelectedItem(null)}
