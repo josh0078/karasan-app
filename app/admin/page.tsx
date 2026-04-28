@@ -36,8 +36,10 @@ function parseJson(val: string | null): string[] {
 }
 
 const STATUS_LABELS: Record<string, string> = { pending: 'Offen', in_progress: 'In Arbeit', done: 'Fertig' }
-const STATUS_COLORS: Record<string, string> = {
-  pending: '#f59e0b', in_progress: '#3b82f6', done: '#22c55e',
+const STATUS_STYLES: Record<string, { bg: string; color: string }> = {
+  pending:     { bg: '#fef9c3', color: '#854d0e' },
+  in_progress: { bg: '#dbeafe', color: '#1e40af' },
+  done:        { bg: '#dcfce7', color: '#15803d' },
 }
 
 export default function AdminPage() {
@@ -180,20 +182,23 @@ export default function AdminPage() {
 
   const filteredItems = filterCat === 'all' ? items : items.filter(i => i.category === filterCat)
 
+  const inputCls = 'w-full px-3 py-2 rounded-xl text-sm border border-gray-300 bg-white text-gray-900 outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400'
+  const labelCls = 'text-xs font-semibold uppercase tracking-wider block mb-1.5 text-gray-500'
+
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#0d0d0d', color: '#f0f0f0' }}>
+    <div className="min-h-screen flex flex-col bg-gray-50 text-gray-900">
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: '#2a2a2a', background: '#111' }}>
+      <header className="flex items-center justify-between px-6 py-3 bg-white border-b border-gray-200 shadow-sm">
         <div className="flex items-center gap-3">
-          <a href="/" className="text-sm" style={{ color: '#6b7280' }}>← Display</a>
-          <span className="text-xl font-bold" style={{ color: '#d4a017' }}>KARASAN</span>
-          <span className="text-xs px-2 py-0.5 rounded-full border" style={{ borderColor: '#2a2a2a', color: '#6b7280' }}>Admin</span>
+          <a href="/" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">← Display</a>
+          <span className="text-xl font-bold text-amber-600">KARASAN</span>
+          <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200">Admin</span>
         </div>
-        <div className="flex rounded-xl overflow-hidden border" style={{ borderColor: '#2a2a2a' }}>
+        <div className="flex rounded-xl overflow-hidden border border-gray-200">
           {(['items', 'orders'] as const).map(v => (
             <button key={v} onClick={() => setView(v)}
               className="px-5 py-2 text-sm font-medium transition-all"
-              style={{ background: view === v ? '#d4a017' : '#1a1a1a', color: view === v ? '#000' : '#9ca3af' }}>
+              style={{ background: view === v ? '#d97706' : '#fff', color: view === v ? '#fff' : '#6b7280' }}>
               {v === 'items' ? '🍽 Artikel' : '📋 Bestellungen'}
             </button>
           ))}
@@ -211,40 +216,40 @@ export default function AdminPage() {
                   <button key={cat} onClick={() => setFilterCat(cat)}
                     className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all border"
                     style={{
-                      background: filterCat === cat ? (cat === 'bar' ? '#d4a017' : cat === 'kitchen' ? '#22c55e' : '#f0f0f0') : '#1a1a1a',
-                      color: filterCat === cat ? '#000' : '#9ca3af',
-                      borderColor: filterCat === cat ? 'transparent' : '#2a2a2a',
+                      background: filterCat === cat ? (cat === 'bar' ? '#d97706' : cat === 'kitchen' ? '#16a34a' : '#111827') : '#fff',
+                      color: filterCat === cat ? '#fff' : '#6b7280',
+                      borderColor: filterCat === cat ? 'transparent' : '#e5e7eb',
                     }}>
                     {cat === 'all' ? 'Alle' : cat === 'bar' ? '🍸 Bar' : '🌿 Küche'}
                   </button>
                 ))}
               </div>
               <button onClick={openNew}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
-                style={{ background: '#d4a017', color: '#000' }}>
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all"
+                style={{ background: '#d97706' }}>
                 + Neuer Artikel
               </button>
             </div>
 
-            <div className="rounded-2xl border overflow-hidden" style={{ borderColor: '#2a2a2a' }}>
+            <div className="rounded-2xl border border-gray-200 overflow-hidden bg-white shadow-sm">
               {filteredItems.length === 0 ? (
-                <div className="text-center py-16" style={{ color: '#6b7280' }}>
+                <div className="text-center py-16 text-gray-400">
                   Noch keine Artikel. Klicke auf &quot;Neuer Artikel&quot;.
                 </div>
               ) : (
                 <table className="w-full text-sm">
                   <thead>
-                    <tr style={{ background: '#1a1a1a', borderBottom: '1px solid #2a2a2a' }}>
+                    <tr className="bg-gray-50 border-b border-gray-200">
                       {['Bild', 'Name', 'Kategorie', 'Zutaten', 'Status', 'Aktionen'].map(h => (
-                        <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>{h}</th>
+                        <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {filteredItems.map((item, idx) => (
-                      <tr key={item.id} style={{ borderBottom: idx < filteredItems.length - 1 ? '1px solid #1e1e1e' : undefined }}>
+                      <tr key={item.id} className={idx < filteredItems.length - 1 ? 'border-b border-gray-100' : ''}>
                         <td className="px-4 py-3">
-                          <div className="w-12 h-12 rounded-lg overflow-hidden flex items-center justify-center" style={{ background: '#0d0d0d' }}>
+                          <div className="w-12 h-12 rounded-lg overflow-hidden flex items-center justify-center bg-gray-100">
                             {item.imageUrl
                               ? <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
                               : <span className="text-xl">{item.category === 'bar' ? '🍸' : '🌿'}</span>
@@ -252,25 +257,28 @@ export default function AdminPage() {
                           </div>
                         </td>
                         <td className="px-4 py-3">
-                          <p className="font-medium">{item.name}</p>
-                          {item.description && <p className="text-xs mt-0.5 line-clamp-1" style={{ color: '#6b7280' }}>{item.description}</p>}
+                          <p className="font-medium text-gray-900">{item.name}</p>
+                          {item.description && <p className="text-xs mt-0.5 line-clamp-1 text-gray-400">{item.description}</p>}
                         </td>
                         <td className="px-4 py-3">
                           <span className="px-2 py-0.5 rounded-full text-xs font-medium"
-                            style={{ background: item.category === 'bar' ? '#d4a01720' : '#22c55e20', color: item.category === 'bar' ? '#d4a017' : '#22c55e' }}>
+                            style={{
+                              background: item.category === 'bar' ? '#fef3c7' : '#dcfce7',
+                              color: item.category === 'bar' ? '#92400e' : '#166534',
+                            }}>
                             {item.category === 'bar' ? '🍸 Bar' : '🌿 Küche'}
                           </span>
                         </td>
-                        <td className="px-4 py-3" style={{ color: '#6b7280' }}>
+                        <td className="px-4 py-3 text-gray-400 text-xs">
                           {parseJson(item.ingredients).length} Zutaten · {parseJson(item.steps).length} Schritte
                         </td>
                         <td className="px-4 py-3">
                           <button onClick={() => toggleAvailable(item)}
                             className="px-2 py-0.5 rounded-full text-xs font-medium border"
                             style={{
-                              background: item.available ? '#22c55e20' : '#ef444420',
-                              color: item.available ? '#22c55e' : '#ef4444',
-                              borderColor: item.available ? '#22c55e40' : '#ef444440',
+                              background: item.available ? '#dcfce7' : '#fee2e2',
+                              color: item.available ? '#15803d' : '#dc2626',
+                              borderColor: item.available ? '#bbf7d0' : '#fecaca',
                             }}>
                             {item.available ? '✓ Aktiv' : '✕ Inaktiv'}
                           </button>
@@ -278,13 +286,11 @@ export default function AdminPage() {
                         <td className="px-4 py-3">
                           <div className="flex gap-2">
                             <button onClick={() => openEdit(item)}
-                              className="px-3 py-1.5 rounded-lg text-xs font-medium border transition-all hover:border-white/20"
-                              style={{ background: '#1a1a1a', borderColor: '#2a2a2a' }}>
+                              className="px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition-all">
                               ✏ Bearbeiten
                             </button>
                             <button onClick={() => deleteItem(item.id)}
-                              className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-                              style={{ background: '#ef444420', color: '#ef4444' }}>
+                              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-red-50 text-red-600 hover:bg-red-100 transition-all">
                               🗑 Löschen
                             </button>
                           </div>
@@ -306,52 +312,66 @@ export default function AdminPage() {
                 {(['active', 'all'] as const).map(f => (
                   <button key={f} onClick={() => setOrderFilter(f)}
                     className="px-3 py-1.5 rounded-lg text-xs font-medium border transition-all"
-                    style={{ background: orderFilter === f ? '#d4a017' : '#1a1a1a', color: orderFilter === f ? '#000' : '#9ca3af', borderColor: orderFilter === f ? 'transparent' : '#2a2a2a' }}>
+                    style={{
+                      background: orderFilter === f ? '#d97706' : '#fff',
+                      color: orderFilter === f ? '#fff' : '#6b7280',
+                      borderColor: orderFilter === f ? 'transparent' : '#e5e7eb',
+                    }}>
                     {f === 'active' ? 'Aktiv' : 'Alle'}
                   </button>
                 ))}
               </div>
-              <button onClick={loadOrders} className="px-3 py-1.5 rounded-lg text-xs border" style={{ borderColor: '#2a2a2a', color: '#9ca3af', background: '#1a1a1a' }}>
+              <button onClick={loadOrders} className="px-3 py-1.5 rounded-lg text-xs border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 transition-all">
                 ↻ Aktualisieren
               </button>
             </div>
             {orders.length === 0 ? (
-              <div className="text-center py-16" style={{ color: '#6b7280' }}>Keine Bestellungen gefunden.</div>
+              <div className="text-center py-16 text-gray-400">Keine Bestellungen gefunden.</div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {orders.map(order => (
-                  <div key={order.id} className="rounded-2xl border p-4" style={{ background: '#1a1a1a', borderColor: '#2a2a2a' }}>
+                  <div key={order.id} className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
                     <div className="flex items-center justify-between mb-3">
                       <div>
-                        <span className="font-bold" style={{ color: order.category === 'bar' ? '#d4a017' : '#22c55e' }}>
+                        <span className="font-bold" style={{ color: order.category === 'bar' ? '#d97706' : '#16a34a' }}>
                           Tisch {order.tableNumber}
                         </span>
-                        <span className="ml-2 text-xs px-1.5 py-0.5 rounded-full" style={{ background: order.category === 'bar' ? '#d4a01720' : '#22c55e20', color: order.category === 'bar' ? '#d4a017' : '#22c55e' }}>
+                        <span className="ml-2 text-xs px-1.5 py-0.5 rounded-full"
+                          style={{
+                            background: order.category === 'bar' ? '#fef3c7' : '#dcfce7',
+                            color: order.category === 'bar' ? '#92400e' : '#166534',
+                          }}>
                           {order.category === 'bar' ? 'Bar' : 'Küche'}
                         </span>
                       </div>
-                      <span className="text-xs" style={{ color: '#6b7280' }}>{new Date(order.createdAt).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}</span>
+                      <span className="text-xs text-gray-400">
+                        {new Date(order.createdAt).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
                     </div>
-                    <ul className="space-y-1 mb-3 text-sm">
+                    <ul className="space-y-1 mb-3 text-sm text-gray-700">
                       {order.items.map(oi => (
                         <li key={oi.id} className="flex justify-between">
                           <span>{oi.menuItem.name}</span>
-                          <span style={{ color: '#6b7280' }}>×{oi.quantity}</span>
+                          <span className="text-gray-400">×{oi.quantity}</span>
                         </li>
                       ))}
                     </ul>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: STATUS_COLORS[order.status] + '25', color: STATUS_COLORS[order.status] }}>
+                      <span className="text-xs px-2 py-0.5 rounded-full font-medium"
+                        style={{ background: STATUS_STYLES[order.status]?.bg, color: STATUS_STYLES[order.status]?.color }}>
                         {STATUS_LABELS[order.status]}
                       </span>
                       {order.status !== 'done' && (
                         <button onClick={() => updateOrderStatus(order.id, order.status === 'pending' ? 'in_progress' : 'done')}
-                          className="flex-1 text-xs py-1.5 rounded-lg font-semibold"
-                          style={{ background: '#d4a017', color: '#000' }}>
+                          className="flex-1 text-xs py-1.5 rounded-lg font-semibold text-white"
+                          style={{ background: '#d97706' }}>
                           {order.status === 'pending' ? '▶ Annehmen' : '✓ Fertig'}
                         </button>
                       )}
-                      <button onClick={() => deleteOrder(order.id)} className="text-xs px-2 py-1.5 rounded-lg" style={{ background: '#ef444420', color: '#ef4444' }}>🗑</button>
+                      <button onClick={() => deleteOrder(order.id)}
+                        className="text-xs px-2 py-1.5 rounded-lg bg-red-50 text-red-500 hover:bg-red-100">
+                        🗑
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -363,19 +383,19 @@ export default function AdminPage() {
 
       {/* ── ITEM FORM MODAL ── */}
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.9)' }}
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
           onClick={e => { if (e.target === e.currentTarget) setShowForm(false) }}>
-          <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl" style={{ background: '#161616', border: '1px solid #2a2a2a' }}>
-            <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: '#2a2a2a' }}>
-              <h2 className="font-bold text-lg">{editingItem ? 'Artikel bearbeiten' : 'Neuer Artikel'}</h2>
-              <button onClick={() => setShowForm(false)} style={{ color: '#6b7280' }}>✕</button>
+          <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white shadow-2xl border border-gray-200">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+              <h2 className="font-bold text-lg text-gray-900">{editingItem ? 'Artikel bearbeiten' : 'Neuer Artikel'}</h2>
+              <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600">✕</button>
             </div>
             <div className="p-6 space-y-4">
               {/* Image */}
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider block mb-2" style={{ color: '#6b7280' }}>Bild</label>
+                <label className={labelCls}>Bild</label>
                 <div className="flex gap-3 items-start">
-                  <div className="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center" style={{ background: '#0d0d0d' }}>
+                  <div className="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center bg-gray-100 border border-gray-200">
                     {form.imageUrl
                       ? <img src={form.imageUrl} alt="preview" className="w-full h-full object-cover" />
                       : <span className="text-3xl">{form.category === 'bar' ? '🍸' : '🌿'}</span>
@@ -385,14 +405,12 @@ export default function AdminPage() {
                     <input ref={fileRef} type="file" accept="image/*" className="hidden"
                       onChange={e => e.target.files?.[0] && uploadImage(e.target.files[0])} />
                     <button onClick={() => fileRef.current?.click()} disabled={uploading}
-                      className="w-full py-2 rounded-xl text-sm border transition-all"
-                      style={{ borderColor: '#2a2a2a', background: '#1a1a1a', color: '#f0f0f0' }}>
+                      className="w-full py-2 rounded-xl text-sm border border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 transition-all">
                       {uploading ? '⏳ Wird hochgeladen…' : '📁 Bild hochladen'}
                     </button>
                     <input type="text" placeholder="oder URL eingeben"
                       value={form.imageUrl} onChange={e => setForm(f => ({ ...f, imageUrl: e.target.value }))}
-                      className="w-full px-3 py-2 rounded-xl text-sm border outline-none"
-                      style={{ background: '#0d0d0d', borderColor: '#2a2a2a', color: '#f0f0f0' }} />
+                      className={inputCls} />
                   </div>
                 </div>
               </div>
@@ -400,17 +418,15 @@ export default function AdminPage() {
               {/* Name + Category */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-semibold uppercase tracking-wider block mb-1.5" style={{ color: '#6b7280' }}>Name *</label>
+                  <label className={labelCls}>Name *</label>
                   <input type="text" placeholder="z.B. Martini" value={form.name}
                     onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                    className="w-full px-3 py-2 rounded-xl text-sm border outline-none"
-                    style={{ background: '#0d0d0d', borderColor: '#2a2a2a', color: '#f0f0f0' }} />
+                    className={inputCls} />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold uppercase tracking-wider block mb-1.5" style={{ color: '#6b7280' }}>Kategorie *</label>
+                  <label className={labelCls}>Kategorie *</label>
                   <select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
-                    className="w-full px-3 py-2 rounded-xl text-sm border outline-none"
-                    style={{ background: '#0d0d0d', borderColor: '#2a2a2a', color: '#f0f0f0' }}>
+                    className={inputCls}>
                     <option value="bar">🍸 Bar</option>
                     <option value="kitchen">🌿 Küche</option>
                   </select>
@@ -419,65 +435,62 @@ export default function AdminPage() {
 
               {/* Description */}
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider block mb-1.5" style={{ color: '#6b7280' }}>Beschreibung</label>
+                <label className={labelCls}>Beschreibung</label>
                 <input type="text" placeholder="Kurze Beschreibung" value={form.description}
                   onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl text-sm border outline-none"
-                  style={{ background: '#0d0d0d', borderColor: '#2a2a2a', color: '#f0f0f0' }} />
+                  className={inputCls} />
               </div>
 
               {/* Ingredients */}
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider block mb-1.5" style={{ color: '#6b7280' }}>
-                  Zutaten <span style={{ color: '#4b5563' }}>(eine pro Zeile)</span>
+                <label className={labelCls}>
+                  Zutaten <span className="text-gray-300 normal-case">(eine pro Zeile)</span>
                 </label>
                 <textarea rows={4} placeholder={'2cl Gin\n1cl Vermouth\nOlive'}
                   value={form.ingredients} onChange={e => setForm(f => ({ ...f, ingredients: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl text-sm border outline-none resize-none"
-                  style={{ background: '#0d0d0d', borderColor: '#2a2a2a', color: '#f0f0f0' }} />
+                  className={`${inputCls} resize-none`} />
               </div>
 
               {/* Steps */}
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider block mb-1.5" style={{ color: '#6b7280' }}>
-                  Zubereitungsschritte <span style={{ color: '#4b5563' }}>(einer pro Zeile)</span>
+                <label className={labelCls}>
+                  Zubereitungsschritte <span className="text-gray-300 normal-case">(einer pro Zeile)</span>
                 </label>
                 <textarea rows={4} placeholder={'Glas mit Eis kühlen\nZutaten in Shaker geben\n30 Sekunden schütteln'}
                   value={form.steps} onChange={e => setForm(f => ({ ...f, steps: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl text-sm border outline-none resize-none"
-                  style={{ background: '#0d0d0d', borderColor: '#2a2a2a', color: '#f0f0f0' }} />
+                  className={`${inputCls} resize-none`} />
               </div>
 
               {/* Notes */}
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider block mb-1.5" style={{ color: '#6b7280' }}>Notizen</label>
+                <label className={labelCls}>Notizen</label>
                 <input type="text" placeholder="z.B. Bitte kalt servieren" value={form.notes}
                   onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl text-sm border outline-none"
-                  style={{ background: '#0d0d0d', borderColor: '#2a2a2a', color: '#f0f0f0' }} />
+                  className={inputCls} />
               </div>
 
               {saveError && (
-                <div className="px-4 py-3 rounded-xl text-sm" style={{ background: '#ef444420', color: '#ef4444', border: '1px solid #ef444440' }}>
+                <div className="px-4 py-3 rounded-xl text-sm bg-red-50 text-red-600 border border-red-200">
                   {saveError}
                 </div>
               )}
 
               {/* Available + Save */}
               <div className="flex items-center justify-between pt-2">
-                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input type="checkbox" checked={form.available} onChange={e => setForm(f => ({ ...f, available: e.target.checked }))}
-                    className="w-4 h-4 rounded" />
+                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                  <input type="checkbox" checked={form.available}
+                    onChange={e => setForm(f => ({ ...f, available: e.target.checked }))}
+                    className="w-4 h-4 rounded accent-amber-500" />
                   Artikel aktiv (im Display sichtbar)
                 </label>
                 <div className="flex gap-3">
-                  <button onClick={() => setShowForm(false)} className="px-4 py-2 rounded-xl text-sm border"
-                    style={{ borderColor: '#2a2a2a', color: '#9ca3af', background: '#1a1a1a' }}>
+                  <button onClick={() => setShowForm(false)}
+                    className="px-4 py-2 rounded-xl text-sm border border-gray-200 text-gray-500 bg-white hover:bg-gray-50">
                     Abbrechen
                   </button>
                   <button onClick={saveItem} disabled={!form.name.trim() || saving}
-                    className="px-6 py-2 rounded-xl text-sm font-semibold disabled:opacity-40"
-                    style={{ background: '#d4a017', color: '#000' }}>
+                    className="px-6 py-2 rounded-xl text-sm font-semibold text-white disabled:opacity-40"
+                    style={{ background: '#d97706' }}>
                     {saving ? 'Speichert…' : '✓ Speichern'}
                   </button>
                 </div>
