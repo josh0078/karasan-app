@@ -577,16 +577,16 @@ export default function AdminPage() {
                   <div>
                     <label className={labelCls}>Kategorie</label>
                     <div className="flex flex-wrap gap-2">
-                      {BAR_SUBCATEGORIES.map(s => (
-                        <button key={s.value} type="button"
-                          onClick={() => setForm(f => ({ ...f, subcategory: f.subcategory === s.value ? '' : s.value }))}
-                          className="px-3 py-1.5 rounded-full text-sm font-medium border transition-all"
-                          style={form.subcategory === s.value
-                            ? { background: '#d97706', color: '#fff', borderColor: '#d97706' }
-                            : { background: '#fff', color: '#6b7280', borderColor: '#e5e7eb' }}>
-                          {s.label}
-                        </button>
-                      ))}
+                      {BAR_SUBCATEGORIES.map(s => {
+                        const active = form.subcategory === s.value
+                        return (
+                          <button key={s.value} type="button"
+                            onClick={e => { e.stopPropagation(); setForm(f => ({ ...f, subcategory: f.subcategory === s.value ? '' : s.value })) }}
+                            className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${active ? 'border-amber-500 bg-amber-500 text-white' : 'border-gray-200 bg-white text-gray-600 hover:border-amber-300'}`}>
+                            {s.label}
+                          </button>
+                        )
+                      })}
                     </div>
                   </div>
                 )}
