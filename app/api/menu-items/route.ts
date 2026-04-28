@@ -33,6 +33,7 @@ export async function POST(request: Request) {
         ingredients: body.ingredients ? JSON.stringify(body.ingredients) : null,
         steps: body.steps ? JSON.stringify(body.steps) : null,
         notes: body.notes || null,
+        price: body.price ?? 0,
         sortOrder: body.sortOrder ?? 0,
       },
     })

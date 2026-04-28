@@ -5,11 +5,13 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const category = searchParams.get('category')
   const active = searchParams.get('active') === 'true'
+  const statusFilter = searchParams.get('status')
 
   const orders = await prisma.order.findMany({
     where: {
       ...(category ? { category } : {}),
       ...(active ? { status: { in: ['pending', 'in_progress'] } } : {}),
+      ...(statusFilter ? { status: statusFilter } : {}),
     },
     include: {
       items: {

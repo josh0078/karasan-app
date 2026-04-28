@@ -11,6 +11,7 @@ type MenuItem = {
   ingredients: string | null
   steps: string | null
   notes: string | null
+  price: number
   available: boolean
 }
 
@@ -27,6 +28,13 @@ type Order = {
   status: string
   createdAt: string
   items: OrderItem[]
+}
+
+type TableGroup = {
+  tableNumber: string
+  orders: Order[]
+  status: string
+  createdAt: string
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -50,6 +58,21 @@ function timeAgo(dateStr: string) {
   if (diff < 60) return `${Math.floor(diff)}s`
   if (diff < 3600) return `${Math.floor(diff / 60)}min`
   return `${Math.floor(diff / 3600)}h`
+}
+
+function groupByTable(orders: Order[]): TableGroup[] {
+  const map = new Map<string, Order[]>()
+  for (const o of orders) {
+    const existing = map.get(o.tableNumber) ?? []
+    map.set(o.tableNumber, [...existing, o])
+  }
+  return Array.from(map.entries()).map(([tableNumber, tableOrders]) => ({
+    tableNumber,
+    orders: tableOrders,
+    status: tableOrders.some(o => o.status === 'in_progress') ? 'in_progress'
+          : tableOrders.every(o => o.status === 'done') ? 'done' : 'pending',
+    createdAt: tableOrders[0].createdAt,
+  }))
 }
 
 export default function Home() {
@@ -111,23 +134,25 @@ export default function Home() {
     fetchOrders()
   }
 
-  async function updateStatus(orderId: string, status: string) {
-    await fetch(`/api/orders/${orderId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
-    })
-    if (status === 'done') {
-      setOrders(prev => prev.filter(o => o.id !== orderId))
-    } else {
-      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status } : o))
-    }
+  async function updateGroupStatus(group: TableGroup, nextStatus: string) {
+    const ordersToUpdate = group.orders.filter(o => o.status !== 'done')
+    await Promise.all(
+      ordersToUpdate.map(o =>
+        fetch(`/api/orders/${o.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: nextStatus }),
+        })
+      )
+    )
+    fetchOrders()
   }
 
   const isBar = tab === 'bar'
   const accent = isBar ? '#d97706' : '#16a34a'
   const accentLight = isBar ? '#fef3c7' : '#dcfce7'
   const activeOrders = orders.filter(o => o.status !== 'done')
+  const tableGroups = groupByTable(activeOrders)
 
   const statusStyle: Record<string, { bg: string; color: string }> = {
     pending:     { bg: '#fef9c3', color: '#854d0e' },
@@ -141,40 +166,32 @@ export default function Home() {
       <header className="flex items-center justify-between px-6 py-3 bg-white border-b border-gray-200 shadow-sm">
         <span className="text-xl font-bold tracking-tight" style={{ color: accent }}>KARASAN</span>
 
-        {/* Tabs */}
         <div className="flex rounded-xl overflow-hidden border border-gray-200">
           <button
             onClick={() => setTab('bar')}
             className="px-6 py-2 text-sm font-semibold transition-all"
-            style={{
-              background: tab === 'bar' ? '#d97706' : '#fff',
-              color: tab === 'bar' ? '#fff' : '#6b7280',
-            }}
+            style={{ background: tab === 'bar' ? '#d97706' : '#fff', color: tab === 'bar' ? '#fff' : '#6b7280' }}
           >
             🍸 Bar
           </button>
           <button
             onClick={() => setTab('kitchen')}
             className="px-6 py-2 text-sm font-semibold transition-all"
-            style={{
-              background: tab === 'kitchen' ? '#16a34a' : '#fff',
-              color: tab === 'kitchen' ? '#fff' : '#6b7280',
-            }}
+            style={{ background: tab === 'kitchen' ? '#16a34a' : '#fff', color: tab === 'kitchen' ? '#fff' : '#6b7280' }}
           >
             🌿 Küche
           </button>
         </div>
 
-        {/* Orders button */}
         <button
           onClick={() => setShowOrders(!showOrders)}
           className="relative flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all"
         >
           📋 Bestellungen
-          {activeOrders.length > 0 && (
+          {tableGroups.length > 0 && (
             <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white"
               style={{ background: accent }}>
-              {activeOrders.length}
+              {tableGroups.length}
             </span>
           )}
         </button>
@@ -189,8 +206,8 @@ export default function Home() {
       )}
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Item Grid */}
-        <main className="flex-1 overflow-y-auto p-5">
+        {/* Item Grid — always 2 columns */}
+        <main className="flex-1 overflow-y-auto p-4">
           {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 gap-3 text-gray-400">
               <span className="text-5xl">{isBar ? '🍸' : '🌿'}</span>
@@ -198,7 +215,7 @@ export default function Home() {
               <a href="/admin" className="text-sm underline" style={{ color: accent }}>Im Admin-Panel hinzufügen →</a>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               {items.map(item => (
                 <button
                   key={item.id}
@@ -215,13 +232,22 @@ export default function Home() {
                   <div className="p-3">
                     <p className="font-semibold text-sm text-gray-900 leading-tight">{item.name}</p>
                     {item.description && (
-                      <p className="text-xs mt-1 text-gray-500 line-clamp-2">{item.description}</p>
+                      <p className="text-xs mt-1 text-gray-500 line-clamp-1">{item.description}</p>
                     )}
-                    {parseJson(item.ingredients).length > 0 && (
-                      <p className="mt-2 text-xs font-medium" style={{ color: accent }}>
-                        {parseJson(item.ingredients).length} Zutaten
-                      </p>
-                    )}
+                    <div className="flex items-center justify-between mt-2">
+                      {item.price > 0 ? (
+                        <span className="text-sm font-bold" style={{ color: accent }}>
+                          {item.price.toFixed(2)} €
+                        </span>
+                      ) : (
+                        <span />
+                      )}
+                      {parseJson(item.ingredients).length > 0 && (
+                        <span className="text-xs text-gray-400">
+                          {parseJson(item.ingredients).length} Zutaten
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </button>
               ))}
@@ -229,7 +255,7 @@ export default function Home() {
           )}
         </main>
 
-        {/* Orders Sidebar */}
+        {/* Orders Sidebar — grouped by table */}
         {showOrders && (
           <aside className="w-80 border-l border-gray-200 bg-white overflow-y-auto flex flex-col shadow-lg">
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
@@ -237,41 +263,49 @@ export default function Home() {
               <button onClick={() => setShowOrders(false)} className="text-gray-400 hover:text-gray-600">✕</button>
             </div>
             <div className="flex-1 p-3 space-y-3">
-              {activeOrders.length === 0 ? (
+              {tableGroups.length === 0 ? (
                 <p className="text-center text-sm mt-8 text-gray-400">Keine aktiven Bestellungen</p>
               ) : (
-                activeOrders.map(order => (
-                  <div key={order.id} className="rounded-xl border bg-white p-3 shadow-sm"
-                    style={{ borderColor: accentLight, borderLeftWidth: 3, borderLeftColor: accent }}>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-bold text-sm" style={{ color: accent }}>Tisch {order.tableNumber}</span>
-                      <span className="text-xs text-gray-400">{timeAgo(order.createdAt)}</span>
+                tableGroups.map(group => {
+                  const allItems = group.orders.flatMap(o => o.items)
+                  const groupStatus = group.status
+                  const nextStatus = STATUS_NEXT[groupStatus]
+                  return (
+                    <div key={group.tableNumber}
+                      className="rounded-xl border bg-white p-3 shadow-sm"
+                      style={{ borderLeftWidth: 3, borderLeftColor: accent, borderColor: accentLight }}>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-bold text-sm" style={{ color: accent }}>
+                          Tisch {group.tableNumber}
+                        </span>
+                        <span className="text-xs text-gray-400">{timeAgo(group.createdAt)}</span>
+                      </div>
+                      <ul className="text-sm space-y-1 mb-3 text-gray-700">
+                        {allItems.map(oi => (
+                          <li key={oi.id} className="flex justify-between">
+                            <span>{oi.menuItem.name}</span>
+                            <span className="font-semibold" style={{ color: accent }}>×{oi.quantity}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs px-2 py-0.5 rounded-full font-medium"
+                          style={{ background: statusStyle[groupStatus]?.bg, color: statusStyle[groupStatus]?.color }}>
+                          {STATUS_LABELS[groupStatus]}
+                        </span>
+                        {nextStatus && (
+                          <button
+                            onClick={() => updateGroupStatus(group, nextStatus)}
+                            className="flex-1 text-xs py-1.5 rounded-lg font-semibold text-white transition-all"
+                            style={{ background: accent }}
+                          >
+                            {nextStatus === 'in_progress' ? '▶ Annehmen' : '✓ Fertig'}
+                          </button>
+                        )}
+                      </div>
                     </div>
-                    <ul className="text-sm space-y-1 mb-3 text-gray-700">
-                      {order.items.map(oi => (
-                        <li key={oi.id} className="flex justify-between">
-                          <span>{oi.menuItem.name}</span>
-                          <span className="font-semibold" style={{ color: accent }}>×{oi.quantity}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                        style={{ background: statusStyle[order.status]?.bg, color: statusStyle[order.status]?.color }}>
-                        {STATUS_LABELS[order.status]}
-                      </span>
-                      {STATUS_NEXT[order.status] && (
-                        <button
-                          onClick={() => updateStatus(order.id, STATUS_NEXT[order.status])}
-                          className="flex-1 text-xs py-1.5 rounded-lg font-semibold text-white transition-all"
-                          style={{ background: accent }}
-                        >
-                          {STATUS_NEXT[order.status] === 'in_progress' ? '▶ Annehmen' : '✓ Fertig'}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))
+                  )
+                })
               )}
             </div>
           </aside>
@@ -297,10 +331,15 @@ export default function Home() {
                 onClick={() => setSelectedItem(null)}
                 className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center text-sm bg-white/90 text-gray-700 shadow"
               >✕</button>
-              <div className="absolute bottom-3 left-4">
+              <div className="absolute bottom-3 left-4 flex items-center gap-2">
                 <span className="px-3 py-1 rounded-full text-xs font-semibold text-white" style={{ background: accent }}>
                   {isBar ? '🍸 Bar' : '🌿 Küche'}
                 </span>
+                {selectedItem.price > 0 && (
+                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-white text-gray-800 shadow">
+                    {selectedItem.price.toFixed(2)} €
+                  </span>
+                )}
               </div>
             </div>
 

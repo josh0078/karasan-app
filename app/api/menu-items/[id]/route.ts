@@ -21,6 +21,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       ingredients: body.ingredients ? JSON.stringify(body.ingredients) : null,
       steps: body.steps ? JSON.stringify(body.steps) : null,
       notes: body.notes || null,
+      price: body.price ?? 0,
       available: body.available ?? true,
       sortOrder: body.sortOrder ?? 0,
     },

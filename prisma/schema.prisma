@@ -16,6 +16,7 @@ model MenuItem {
   ingredients String?     // JSON-Array: ["2cl Gin", "1cl Vermouth"]
   steps       String?     // JSON-Array: ["Glas kühlen", "Zutaten mischen"]
   notes       String?
+  price       Float       @default(0)
   available   Boolean     @default(true)
   sortOrder   Int         @default(0)
   createdAt   DateTime    @default(now())
