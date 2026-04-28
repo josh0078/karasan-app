@@ -2,10 +2,21 @@
 
 import { useState, useEffect, useCallback } from 'react'
 
+const BAR_SUBCATEGORIES = [
+  { key: 'bier', label: 'Bier' },
+  { key: 'wein', label: 'Wein' },
+  { key: 'shots', label: 'Shots' },
+  { key: 'cocktails', label: 'Cocktails' },
+  { key: 'softgetraenke', label: 'Softgetränke' },
+  { key: 'energy', label: 'Energy' },
+  { key: 'heissgetraenke', label: 'Heißgetränke' },
+]
+
 type MenuItem = {
   id: string
   name: string
   category: string
+  subcategory: string
   description: string | null
   imageUrl: string | null
   ingredients: string | null
@@ -77,6 +88,7 @@ function groupByTable(orders: Order[]): TableGroup[] {
 
 export default function Home() {
   const [tab, setTab] = useState<'bar' | 'kitchen'>('bar')
+  const [subcatFilter, setSubcatFilter] = useState('')
   const [items, setItems] = useState<MenuItem[]>([])
   const [orders, setOrders] = useState<Order[]>([])
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null)
@@ -103,6 +115,10 @@ export default function Home() {
         return fresh
       })
     }
+  }, [tab])
+
+  useEffect(() => {
+    setSubcatFilter('')
   }, [tab])
 
   useEffect(() => {
@@ -153,6 +169,9 @@ export default function Home() {
   const accentLight = isBar ? '#fef3c7' : '#dcfce7'
   const activeOrders = orders.filter(o => o.status !== 'done')
   const tableGroups = groupByTable(activeOrders)
+  const filteredItems = (subcatFilter && isBar)
+    ? items.filter(i => i.subcategory === subcatFilter)
+    : items
 
   const statusStyle: Record<string, { bg: string; color: string }> = {
     pending:     { bg: '#fef9c3', color: '#854d0e' },
@@ -207,16 +226,36 @@ export default function Home() {
 
       <div className="flex flex-1 overflow-hidden">
         {/* Item Grid — always 2 columns */}
-        <main className="flex-1 overflow-y-auto p-4">
-          {items.length === 0 ? (
+        <main className="flex-1 overflow-y-auto flex flex-col">
+          {isBar && (
+            <div className="px-4 pt-3 pb-1 flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+              <button
+                onClick={() => setSubcatFilter('')}
+                className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all"
+                style={subcatFilter === '' ? { background: '#d97706', color: '#fff', borderColor: '#d97706' }
+                                           : { background: '#fff', color: '#6b7280', borderColor: '#e5e7eb' }}
+              >Alle</button>
+              {BAR_SUBCATEGORIES.map(s => (
+                <button key={s.key}
+                  onClick={() => setSubcatFilter(subcatFilter === s.key ? '' : s.key)}
+                  className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all"
+                  style={subcatFilter === s.key
+                    ? { background: '#d97706', color: '#fff', borderColor: '#d97706' }
+                    : { background: '#fff', color: '#6b7280', borderColor: '#e5e7eb' }}
+                >{s.label}</button>
+              ))}
+            </div>
+          )}
+          <div className="flex-1 p-4">
+          {filteredItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-64 gap-3 text-gray-400">
               <span className="text-5xl">{isBar ? '🍸' : '🌿'}</span>
-              <p className="text-base">Noch keine Artikel angelegt.</p>
-              <a href="/admin" className="text-sm underline" style={{ color: accent }}>Im Admin-Panel hinzufügen →</a>
+              <p className="text-base">{subcatFilter ? 'Keine Artikel in dieser Kategorie.' : 'Noch keine Artikel angelegt.'}</p>
+              {!subcatFilter && <a href="/admin" className="text-sm underline" style={{ color: accent }}>Im Admin-Panel hinzufügen →</a>}
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3">
-              {items.map(item => (
+              {filteredItems.map(item => (
                 <button
                   key={item.id}
                   onClick={() => { setSelectedItem(item); setQuantity(1) }}
@@ -253,6 +292,7 @@ export default function Home() {
               ))}
             </div>
           )}
+          </div>
         </main>
 
         {/* Orders Sidebar — grouped by table */}
