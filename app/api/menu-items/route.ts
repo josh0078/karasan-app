@@ -5,11 +5,13 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const category = searchParams.get('category')
+    const subcategory = searchParams.get('subcategory')
     const includeUnavailable = searchParams.get('includeUnavailable') === 'true'
 
     const items = await prisma.menuItem.findMany({
       where: {
         ...(category ? { category } : {}),
+        ...(subcategory ? { subcategory } : {}),
         ...(includeUnavailable ? {} : { available: true }),
       },
       orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
@@ -28,6 +30,7 @@ export async function POST(request: Request) {
       data: {
         name: body.name,
         category: body.category,
+        subcategory: body.subcategory || '',
         description: body.description || null,
         imageUrl: body.imageUrl || null,
         ingredients: body.ingredients ? JSON.stringify(body.ingredients) : null,

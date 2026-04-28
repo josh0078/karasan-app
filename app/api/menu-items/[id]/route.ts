@@ -16,6 +16,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     data: {
       name: body.name,
       category: body.category,
+      subcategory: body.subcategory || '',
       description: body.description || null,
       imageUrl: body.imageUrl || null,
       ingredients: body.ingredients ? JSON.stringify(body.ingredients) : null,

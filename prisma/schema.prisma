@@ -11,6 +11,7 @@ model MenuItem {
   id          String      @id @default(cuid())
   name        String
   category    String      // "bar" | "kitchen"
+  subcategory String      @default("")  // "bier" | "wein" | "shots" | "cocktails" | "softgetraenke" | "energy" | "heissgetraenke"
   description String?
   imageUrl    String?
   ingredients String?     // JSON-Array: ["2cl Gin", "1cl Vermouth"]
