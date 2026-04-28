@@ -2,24 +2,38 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export async function POST(request: NextRequest) {
-  const { username, password } = await request.json()
+  const { password, type } = await request.json()
 
-  const validUser = process.env.AUTH_USERNAME
-  const validPass = process.env.AUTH_PASSWORD
-
-  if (username === validUser && password === validPass) {
+  if (type === 'admin') {
+    const validPass = process.env.ADMIN_PASSWORD ?? '2026'
+    if (password !== validPass) {
+      return NextResponse.json({ ok: false, error: 'Falsches Admin-Passwort' }, { status: 401 })
+    }
     const response = NextResponse.json({ ok: true })
-    response.cookies.set('karasan-auth', process.env.AUTH_SECRET!, {
+    response.cookies.set('karasan-admin', process.env.ADMIN_SECRET ?? 'karasan-admin-2026', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 30, // 30 Tage
+      maxAge: 60 * 60 * 8,
       path: '/',
     })
     return response
   }
 
-  return NextResponse.json({ ok: false, error: 'Falscher Benutzername oder Passwort' }, { status: 401 })
+  // Staff login
+  const validPass = process.env.AUTH_PASSWORD ?? 'karasan'
+  if (password !== validPass) {
+    return NextResponse.json({ ok: false, error: 'Falsches Passwort' }, { status: 401 })
+  }
+  const response = NextResponse.json({ ok: true })
+  response.cookies.set('karasan-auth', process.env.AUTH_SECRET ?? 'karasan-staff', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 8,
+    path: '/',
+  })
+  return response
 }
 
 export async function DELETE() {
