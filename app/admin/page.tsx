@@ -572,21 +572,29 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                {/* Subcategory pills — only for bar */}
+                {/* Subcategory — only for bar */}
                 {form.category === 'bar' && (
                   <div>
-                    <label className={labelCls}>Kategorie</label>
+                    <label className={labelCls}>Getränke-Kategorie</label>
                     <div className="flex flex-wrap gap-2">
-                      {BAR_SUBCATEGORIES.map(s => {
-                        const active = form.subcategory === s.value
-                        return (
-                          <button key={s.value} type="button"
-                            onClick={e => { e.stopPropagation(); setForm(f => ({ ...f, subcategory: f.subcategory === s.value ? '' : s.value })) }}
-                            className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${active ? 'border-amber-500 bg-amber-500 text-white' : 'border-gray-200 bg-white text-gray-600 hover:border-amber-300'}`}>
-                            {s.label}
-                          </button>
-                        )
-                      })}
+                      {BAR_SUBCATEGORIES.map(s => (
+                        <label key={s.value}
+                          className={`px-3 py-2 rounded-full text-sm font-medium border cursor-pointer select-none transition-all ${
+                            form.subcategory === s.value
+                              ? 'bg-amber-500 border-amber-500 text-white'
+                              : 'bg-white border-gray-200 text-gray-600 hover:border-amber-300'
+                          }`}>
+                          <input
+                            type="radio"
+                            name="subcategory"
+                            value={s.value}
+                            checked={form.subcategory === s.value}
+                            onChange={() => setForm(f => ({ ...f, subcategory: s.value }))}
+                            className="sr-only"
+                          />
+                          {s.label}
+                        </label>
+                      ))}
                     </div>
                   </div>
                 )}
